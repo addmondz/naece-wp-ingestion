@@ -4,7 +4,7 @@ require_once('../wp-config.php');
 ?>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
-<link rel="stylesheet" href="ingestion.css">
+<link rel="stylesheet" href="ingestion-v1.css">
 
 <div class="container">
     <h1>Product CSV Import</h1>
@@ -67,7 +67,7 @@ require_once('../wp-config.php');
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const BATCH_SIZE = 500;
+        const BATCH_SIZE = 100;
         const MAX_WORKERS = 2;
 
         const elements = {
@@ -81,7 +81,7 @@ require_once('../wp-config.php');
             tbody: document.querySelector('#resultTable tbody')
         };
 
-        elements.status.innerHTML += `Limit per batch: ${BATCH_SIZE.toLocaleString()} rows<br>Worker: ${MAX_WORKERS.toLocaleString()}`;
+        elements.status.innerHTML += `Limit per batch: ${BATCH_SIZE.toLocaleString()} rows<br>No. of Workers: ${MAX_WORKERS.toLocaleString()}`;
 
         let state;
 
