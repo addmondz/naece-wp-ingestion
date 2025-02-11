@@ -156,22 +156,29 @@ require_once('../wp-config.php');
 
             try {
                 const response = await fetch('<?= site_url() ?>/ingestion/function.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: new URLSearchParams({
-                        csvFile: elements.csv.value,
-                        mainCategory: elements.mainCat.value, // now using select2 value
-                        subCategory: elements.subCat.value, // now using select2 value
-                        offset: offset,
-                        batchSize: BATCH_SIZE
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: new URLSearchParams({
+                            csvFile: elements.csv.value,
+                            mainCategory: elements.mainCat.value, // now using select2 value
+                            subCategory: elements.subCat.value, // now using select2 value
+                            offset: offset,
+                            batchSize: BATCH_SIZE
+                        })
                     })
-                });
+                    .then(response => response.text()) // Get raw response as text
+                    .then(parseJsonResponse); // Parse JSON safely
 
+                if (!response || !response.data) {
+                    throw new Error("Invalid response format");
+                }
+
+                // Extract `data` safely
                 const {
                     data
-                } = await response.json();
+                } = response;
 
                 // Set total on the first batch
                 if (offset === 0) {
@@ -264,6 +271,27 @@ require_once('../wp-config.php');
                 updateStatus();
             }
         }
+
+        function parseJsonResponse(responseText) {
+            try {
+                // Extract JSON substring
+                const jsonStart = responseText.indexOf('{');
+                const jsonEnd = responseText.lastIndexOf('}') + 1;
+
+                if (jsonStart === -1 || jsonEnd === 0) {
+                    throw new Error("No valid JSON found in response");
+                }
+
+                const jsonString = responseText.substring(jsonStart, jsonEnd);
+
+                // Parse JSON
+                return JSON.parse(jsonString);
+            } catch (error) {
+                console.error("Error parsing JSON:", error.message);
+                return null; // Return null or an empty object depending on your use case
+            }
+        }
+
 
         // --- Start / Stop Button Event Handlers ---
         elements.startBtn.addEventListener('click', () => {
