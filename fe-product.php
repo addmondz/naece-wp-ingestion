@@ -76,17 +76,24 @@ require_once('../wp-config.php');
             tbody: document.querySelector('#resultTable tbody')
         };
 
-        elements.status.innerHTML += `Limit per batch: ${BATCH_SIZE.toLocaleString()} rows`;
+        elements.status.innerHTML += `Limit per batch: ${BATCH_SIZE.toLocaleString()} rows<br>Worker: ${MAX_WORKERS.toLocaleString()}`;
 
-        let state = {
-            isProcessing: false,
-            offset: 0,
-            total: 0,
-            processed: 0,
-            startTime: 0,
-            rows: [],
-            dispatchedBatches: new Set()
-        };
+        let state;
+
+        function resetState() {
+            // Reset state
+            state = {
+                isProcessing: true,
+                offset: 0,
+                total: 0,
+                processed: 0,
+                startTime: Date.now(),
+                dispatchedTotal: 0,
+                rows: [],
+                dispatchedBatches: new Set()
+            };
+        }
+        resetState();
 
         // Initialize Select2
         jQuery('#csvSelect').select2({
@@ -94,6 +101,7 @@ require_once('../wp-config.php');
         });
 
         async function processBatch(workerId, offset) {
+            console.log(workerId, offset);
             if (!state.isProcessing) return;
 
             // Add to dispatched batches immediately
@@ -148,8 +156,10 @@ require_once('../wp-config.php');
                 addTableRow(offset, data);
 
                 // Continue if more records exist
+                // console.log(data.remaining);
                 if (data.remaining > 0 && state.isProcessing) {
-                    processBatch(workerId, offset + BATCH_SIZE);
+                    processBatch(workerId, state.dispatchedTotal);
+                    state.dispatchedTotal += BATCH_SIZE;
                 } else {
                     checkCompletion();
                 }
@@ -167,12 +177,15 @@ require_once('../wp-config.php');
 
             let statusText = `
             Limit per batch: ${BATCH_SIZE.toLocaleString()} rows<br>
+            Worker: ${MAX_WORKERS.toLocaleString()}<br>
             Progress: ${progress}% (${state.processed.toLocaleString()} / ${state.total.toLocaleString()})<br>
             Time: ${Math.floor(elapsed / 60)}m ${elapsed % 60}s
         `;
 
             if (state.processed >= state.total && state.total > 0) {
-                statusText += '<br>✅ Processing Complete!';
+                statusText += '<br>✅ Import Completed!';
+            } else {
+                statusText += '<br>⌛ Processing...';
             }
 
             elements.status.innerHTML = statusText;
@@ -223,15 +236,7 @@ require_once('../wp-config.php');
             }
 
             // Reset state
-            state = {
-                isProcessing: true,
-                offset: 0,
-                total: 0,
-                processed: 0,
-                startTime: Date.now(),
-                rows: [],
-                dispatchedBatches: new Set()
-            };
+            resetState();
 
             // Update UI
             elements.tbody.innerHTML = '';
@@ -241,7 +246,8 @@ require_once('../wp-config.php');
 
             // Start workers
             for (let i = 0; i < MAX_WORKERS; i++) {
-                processBatch(i + 1, state.offset + (i * BATCH_SIZE));
+                processBatch(i + 1, state.dispatchedTotal);
+                state.dispatchedTotal += BATCH_SIZE;
             }
         });
 

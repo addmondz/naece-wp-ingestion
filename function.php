@@ -134,7 +134,8 @@ function process_csv_batch() {
 
         return send_response(
             'Batch processed successfully', 
-            max(0, $total_records - ($offset + $batch_size)),
+            // max(0, $total_records - ($offset + $batch_size)), // no need to deduct $offset due to the $ttoal already remove the offset
+            max(0, $total_records - $batch_size),
             $total_records,
             array_merge($stats, ['process_time' => $process_time])
         );
