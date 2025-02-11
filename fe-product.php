@@ -25,14 +25,16 @@ require_once('../wp-config.php');
         </select>
     </div>
 
+    <!-- Main Category -->
     <div class="form-group">
         <label>Main Category:</label>
-        <input type="text" id="mainCategory">
+        <select id="mainCategory"></select>
     </div>
 
+    <!-- Sub Category -->
     <div class="form-group">
         <label>Sub Category:</label>
-        <input type="text" id="subCategory">
+        <select id="subCategory"></select>
     </div>
 
     <div id="status"></div>
@@ -60,6 +62,9 @@ require_once('../wp-config.php');
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
+<!-- Include your categories file BEFORE your main script -->
+<script src="product-categories.js"></script>
+
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const BATCH_SIZE = 500;
@@ -81,7 +86,7 @@ require_once('../wp-config.php');
         let state;
 
         function resetState() {
-            // Reset state
+            // Reset state variables
             state = {
                 isProcessing: true,
                 offset: 0,
@@ -95,16 +100,49 @@ require_once('../wp-config.php');
         }
         resetState();
 
-        // Initialize Select2
+        // --- Initialize Select2 for CSV file ---
         jQuery('#csvSelect').select2({
             placeholder: 'Select CSV file'
         });
 
+        // --- Populate and Initialize Main & Sub Category Select2 Dropdowns ---
+        const $mainSelect = jQuery('#mainCategory');
+        const $subSelect = jQuery('#subCategory');
+
+        // Populate main category with options
+        $mainSelect.append('<option value="">Select Main Category</option>');
+        jQuery.each(categories, function(mainCat, subCats) {
+            $mainSelect.append('<option value="' + mainCat + '">' + mainCat + '</option>');
+        });
+
+        // Initialize Select2 for both selects
+        $mainSelect.select2({
+            placeholder: 'Select Main Category'
+        });
+        $subSelect.select2({
+            placeholder: 'Select Sub Category'
+        });
+
+        // When the main category changes, update the sub-category options
+        $mainSelect.on('change', function() {
+            const selectedMain = $(this).val();
+            $subSelect.empty(); // Remove any existing options
+            // Add a default placeholder option
+            $subSelect.append('<option value="">Select Sub Category</option>');
+            if (selectedMain && categories[selectedMain]) {
+                jQuery.each(categories[selectedMain], function(index, subCat) {
+                    $subSelect.append('<option value="' + subCat + '">' + subCat + '</option>');
+                });
+            }
+            $subSelect.trigger('change'); // Refresh select2 display
+        });
+
+        // --- Batch Processing Functions (unchanged) ---
         async function processBatch(workerId, offset) {
             console.log(workerId, offset);
             if (!state.isProcessing) return;
 
-            // Add to dispatched batches immediately
+            // Mark this batch as dispatched
             state.dispatchedBatches.add(offset);
             addTableRow(offset, {
                 message: '⌛ Processing...',
@@ -124,8 +162,8 @@ require_once('../wp-config.php');
                     },
                     body: new URLSearchParams({
                         csvFile: elements.csv.value,
-                        mainCategory: elements.mainCat.value,
-                        subCategory: elements.subCat.value,
+                        mainCategory: elements.mainCat.value, // now using select2 value
+                        subCategory: elements.subCat.value, // now using select2 value
                         offset: offset,
                         batchSize: BATCH_SIZE
                     })
@@ -135,7 +173,7 @@ require_once('../wp-config.php');
                     data
                 } = await response.json();
 
-                // Update total and processed counts
+                // Set total on the first batch
                 if (offset === 0) {
                     state.total = parseInt(data.total_records) || 0;
                 }
@@ -147,16 +185,15 @@ require_once('../wp-config.php');
 
                 state.processed += currentBatchTotal;
 
-                // Check if this is the last batch
+                // If no records remaining, update processed count to total
                 if (data.remaining === 0) {
-                    state.processed = state.total; // Ensure we show 100%
+                    state.processed = state.total;
                 }
 
                 updateStatus();
                 addTableRow(offset, data);
 
-                // Continue if more records exist
-                // console.log(data.remaining);
+                // If more records remain and processing hasn’t been stopped, queue the next batch
                 if (data.remaining > 0 && state.isProcessing) {
                     processBatch(workerId, state.dispatchedTotal);
                     state.dispatchedTotal += BATCH_SIZE;
@@ -203,17 +240,16 @@ require_once('../wp-config.php');
                 <td>${(data.duplicates || 0).toLocaleString()}</td>
                 <td>${(data.nulls || 0).toLocaleString()}</td>
                 <td>${data.remaining ? data.remaining.toLocaleString() : '...'}</td>
-                <td>${data.process_time + 's' ?? '-'}</td>
+                <td>${data.process_time ? data.process_time + 's' : '-'}</td>
                 <td>${data.message}</td>
             `
             });
 
-            // Sort and update table
+            // Sort rows and update table display
             updateTable();
         }
 
         function updateTable() {
-            // Sort rows by offset
             state.rows.sort((a, b) => a.offset - b.offset);
             elements.tbody.innerHTML = state.rows
                 .map(row => `<tr>${row.html}</tr>`)
@@ -229,22 +265,20 @@ require_once('../wp-config.php');
             }
         }
 
+        // --- Start / Stop Button Event Handlers ---
         elements.startBtn.addEventListener('click', () => {
             if (!elements.csv.value || !elements.mainCat.value || !elements.subCat.value) {
                 alert('Please fill all fields');
                 return;
             }
 
-            // Reset state
             resetState();
-
-            // Update UI
             elements.tbody.innerHTML = '';
             elements.table.style.display = 'table';
             elements.startBtn.disabled = true;
             elements.stopBtn.disabled = false;
 
-            // Start workers
+            // Start the workers for batch processing
             for (let i = 0; i < MAX_WORKERS; i++) {
                 processBatch(i + 1, state.dispatchedTotal);
                 state.dispatchedTotal += BATCH_SIZE;
@@ -258,3 +292,6 @@ require_once('../wp-config.php');
         });
     });
 </script>
+</body>
+
+</html>

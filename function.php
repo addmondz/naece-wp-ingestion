@@ -75,7 +75,7 @@ function process_csv_batch() {
             // Create post
             $post_id = wp_insert_post([
                 'post_title'  => $item['Model Number'] ?? 'No Title',
-                'post_status' => 'draft',
+                'post_status' => 'publish',
                 'post_type'   => 'job_listing'
             ]);
 
