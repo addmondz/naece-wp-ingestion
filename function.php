@@ -6,12 +6,13 @@ require_once('../wp-config.php');
 ini_set('max_execution_time', 0);
 ini_set('memory_limit', '-1');
 
-function process_csv_batch() {
+function process_csv_batch()
+{
     global $wpdb;
-    
+
     // Start timing the process
     $start_time = microtime(true);
-    
+
     // 1. Get and validate inputs
     $csv_file = $_POST['csvFile'] ?? '';
     $main_cat = $_POST['mainCategory'] ?? '';
@@ -31,7 +32,7 @@ function process_csv_batch() {
     // 2. Read CSV batch
     $handle = fopen($csv_path, 'r');
     $headers = fgetcsv($handle);
-    
+
     // Skip to current offset
     for ($i = 0; $i < $offset; $i++) fgetcsv($handle);
 
@@ -52,7 +53,7 @@ function process_csv_batch() {
 
     // 3. Process batch
     $stats = ['fetched' => 0, 'duplicates' => 0, 'nulls' => 0, 'processed' => 0];
-    
+
     try {
         $wpdb->query('START TRANSACTION');
 
@@ -94,7 +95,8 @@ function process_csv_batch() {
             // Add other fields as meta
             foreach ($item as $key => $value) {
                 if ($key !== 'id' && $value) {
-                    $meta['_' . sanitize_key($key)] = $value;
+                    // $meta['_' . sanitize_key($key)] = $value; // sanitize_key will remove space
+                    $meta['_' . str_replace(' ', '_', $key)] = $value;
                 }
             }
 
@@ -109,7 +111,7 @@ function process_csv_batch() {
                     "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_apiid' AND meta_value = %s LIMIT 1",
                     $item['Naece Id']
                 ));
-                
+
                 if ($parent_id) {
                     $wpdb->insert(
                         $wpdb->prefix . 'mylisting_relations',
@@ -133,31 +135,34 @@ function process_csv_batch() {
         $process_time = round(microtime(true) - $start_time, 1);
 
         return send_response(
-            'Batch processed successfully', 
+            'Batch processed successfully',
             // max(0, $total_records - ($offset + $batch_size)), // no need to deduct $offset due to the $ttoal already remove the offset
             max(0, $total_records - $batch_size),
             $total_records,
             array_merge($stats, ['process_time' => $process_time])
         );
-
     } catch (Exception $e) {
         $wpdb->query('ROLLBACK');
-        
+
         // Include process time even for errors
         $process_time = round(microtime(true) - $start_time, 1);
         return send_response('Error: ' . $e->getMessage(), 0, 0, ['process_time' => $process_time]);
     }
 }
 
-function send_response($message, $remaining, $total = 0, $stats = []) {
-    echo json_encode([
-        'data' => array_merge([
-            'message' => $message,
-            'remaining' => $remaining,
-            'total_records' => $total
-        ], $stats)
-    ]);
-    exit;
+function send_response($message, $remaining, $total = 0, $stats = [], $success = true)
+{
+    $response_data = array_merge([
+        'message' => $message,
+        'remaining' => $remaining,
+        'total_records' => $total
+    ], $stats);
+
+    if ($success) {
+        wp_send_json_success($response_data); // Sends JSON with a 200 status
+    } else {
+        wp_send_json_error($response_data); // Sends JSON with a 400+ status
+    }
 }
 
 process_csv_batch();
