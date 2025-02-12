@@ -38,6 +38,7 @@ require_once('../wp-config.php');
     </div>
 
     <div id="status"></div>
+    <div id="error-container"></div>
 
     <button id="startBtn">Start Import</button>
     <button id="stopBtn" disabled>Stop</button>
@@ -78,10 +79,13 @@ require_once('../wp-config.php');
             stopBtn: document.getElementById('stopBtn'),
             status: document.getElementById('status'),
             table: document.getElementById('resultTable'),
-            tbody: document.querySelector('#resultTable tbody')
+            tbody: document.querySelector('#resultTable tbody'),
+            errorContainer: document.getElementById('error-container')
         };
 
         elements.status.innerHTML += `Limit per batch: ${BATCH_SIZE.toLocaleString()} rows<br>No. of Workers: ${MAX_WORKERS.toLocaleString()}`;
+        elements.errorContainer.innerHTML = '';
+        elements.errorContainer.style.display = 'none';
 
         let state;
 
@@ -139,7 +143,7 @@ require_once('../wp-config.php');
 
         // --- Batch Processing Functions (unchanged) ---
         async function processBatch(workerId, offset) {
-            console.log(workerId, offset);
+            // console.log(workerId, offset);
             if (!state.isProcessing) return;
 
             // Mark this batch as dispatched
@@ -200,6 +204,20 @@ require_once('../wp-config.php');
                 updateStatus();
                 addTableRow(offset, data);
 
+                if (!response.success) {
+                    elements.errorContainer.innerHTML = '<h1 style="margin-top: 0;">Error</h1>'
+                    elements.errorContainer.innerHTML += data.message;
+                    elements.errorContainer.style.display = 'block';
+
+                    // update buttons
+                    state.isProcessing = false;
+                    elements.startBtn.disabled = false;
+                    elements.stopBtn.disabled = true;
+
+                    updateStatus(true);
+                    return;
+                }
+
                 // If more records remain and processing hasn’t been stopped, queue the next batch
                 if (data.remaining > 0 && state.isProcessing) {
                     processBatch(workerId, state.dispatchedTotal);
@@ -215,7 +233,7 @@ require_once('../wp-config.php');
             }
         }
 
-        function updateStatus() {
+        function updateStatus(forceEnd = false) {
             const progress = state.total > 0 ? ((state.processed / state.total) * 100).toFixed(1) : 0;
             const elapsed = Math.floor((Date.now() - state.startTime) / 1000);
 
@@ -226,7 +244,9 @@ require_once('../wp-config.php');
             Time: ${Math.floor(elapsed / 60)}m ${elapsed % 60}s
         `;
 
-            if (state.processed >= state.total && state.total > 0) {
+            if (forceEnd) {
+                statusText += '';
+            } else if (state.processed >= state.total && state.total > 0) {
                 statusText += '<br>✅ Import Completed!';
             } else {
                 statusText += '<br>⌛ Processing...';

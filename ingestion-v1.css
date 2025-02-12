@@ -72,3 +72,12 @@
      border-radius: 4px;
     /* Optional: for rounded corners */
 }
+
+#error-container {
+    border: 1px solid #dc3545; /* Bootstrap danger color */
+    background-color: #f8d7da; /* Light red background */
+    padding: 10px;
+    border-radius: 5px;
+    color: #721c24; /* Dark red text for better contrast */
+  }
+  

@@ -21,17 +21,42 @@ function process_csv_batch()
     $batch_size = (int)($_POST['batchSize'] ?? 500);
 
     if (!$csv_file || !$main_cat || !$sub_cat) {
-        return send_response('Missing required fields', 0);
+        return send_response('Missing required fields', 0, false);
     }
 
     $csv_path = __DIR__ . '/csv/product/' . $csv_file;
     if (!file_exists($csv_path)) {
-        return send_response('CSV file not found', 0);
+        return send_response('CSV file not found', 0, false);
     }
 
     // 2. Read CSV batch
     $handle = fopen($csv_path, 'r');
+    if (!$handle) {
+        return send_response('Unable to open CSV file', 0, false);
+    }
+
+    // Read headers
     $headers = fgetcsv($handle);
+    if (!$headers) {
+        fclose($handle);
+        return send_response('CSV file is empty or invalid', 0, false);
+    }
+
+    // Define required fields
+    $required_fields = [
+        'ENERGY STAR Unique ID',
+        'Model Number',
+        'Naece Id'
+        // Add the required columns
+    ];
+
+    // Check if all required fields exist in the headers
+    $missing_fields = array_diff($required_fields, $headers);
+    if (!empty($missing_fields)) {
+        fclose($handle);
+        return send_response('Missing required fields: ' . implode(', ', $missing_fields), 0, false);
+    }
+
 
     // Skip to current offset
     for ($i = 0; $i < $offset; $i++) fgetcsv($handle);
@@ -146,11 +171,17 @@ function process_csv_batch()
 
         // Include process time even for errors
         $process_time = round(microtime(true) - $start_time, 1);
-        return send_response('Error: ' . $e->getMessage(), 0, 0, ['process_time' => $process_time]);
+        return send_response(
+            'Error: ' . $e->getMessage(),
+            0,
+            false,
+            0,
+            ['process_time' => $process_time]
+        );
     }
 }
 
-function send_response($message, $remaining, $total = 0, $stats = [], $success = true)
+function send_response($message, $remaining, $success = true, $total = 0, $stats = [])
 {
     $response_data = array_merge([
         'message' => $message,
