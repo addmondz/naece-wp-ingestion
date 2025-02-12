@@ -10,6 +10,22 @@ require_once('../wp-config.php');
     <h1>Product CSV Import</h1>
 
     <div class="form-group">
+        <label>CSV Source:</label>
+        <select id="csvSource">
+            <option value="">Select CSV Source</option>
+            <?php
+            $csvSources = [
+                'DLC',
+                'Energy Star',
+            ];
+            foreach ($csvSources as $source) {
+                echo "<option value='" . htmlspecialchars($source) . "'>" . htmlspecialchars($source) . "</option>";
+            }
+            ?>
+        </select>
+    </div>
+
+    <div class="form-group">
         <label>CSV File:</label>
         <select id="csvSelect">
             <option value="">Select CSV</option>
@@ -73,6 +89,7 @@ require_once('../wp-config.php');
 
         const elements = {
             csv: document.getElementById('csvSelect'),
+            source: document.getElementById('csvSource'),
             mainCat: document.getElementById('mainCategory'),
             subCat: document.getElementById('subCategory'),
             startBtn: document.getElementById('startBtn'),
@@ -84,8 +101,6 @@ require_once('../wp-config.php');
         };
 
         elements.status.innerHTML += `Limit per batch: ${BATCH_SIZE.toLocaleString()} rows<br>No. of Workers: ${MAX_WORKERS.toLocaleString()}`;
-        elements.errorContainer.innerHTML = '';
-        elements.errorContainer.style.display = 'none';
 
         let state;
 
@@ -101,12 +116,19 @@ require_once('../wp-config.php');
                 rows: [],
                 dispatchedBatches: new Set()
             };
+
+            elements.errorContainer.innerHTML = '';
+            elements.errorContainer.style.display = 'none';
         }
         resetState();
 
         // --- Initialize Select2 for CSV file ---
         jQuery('#csvSelect').select2({
             placeholder: 'Select CSV file'
+        });
+
+        jQuery('#csvSource').select2({
+            placeholder: 'Select CSV Source'
         });
 
         // --- Populate and Initialize Main & Sub Category Select2 Dropdowns ---
@@ -166,6 +188,7 @@ require_once('../wp-config.php');
                         },
                         body: new URLSearchParams({
                             csvFile: elements.csv.value,
+                            csvSource: elements.source.value,
                             mainCategory: elements.mainCat.value, // now using select2 value
                             subCategory: elements.subCat.value, // now using select2 value
                             offset: offset,

@@ -15,12 +15,13 @@ function process_csv_batch()
 
     // 1. Get and validate inputs
     $csv_file = $_POST['csvFile'] ?? '';
+    $csv_source = $_POST['csvSource'] ?? '';
     $main_cat = $_POST['mainCategory'] ?? '';
     $sub_cat = $_POST['subCategory'] ?? '';
     $offset = (int)($_POST['offset'] ?? 0);
     $batch_size = (int)($_POST['batchSize'] ?? 500);
 
-    if (!$csv_file || !$main_cat || !$sub_cat) {
+    if (!$csv_file || !$main_cat || !$sub_cat || !$csv_source) {
         return send_response('Missing required fields', 0, false);
     }
 
@@ -42,13 +43,22 @@ function process_csv_batch()
         return send_response('CSV file is empty or invalid', 0, false);
     }
 
-    // Define required fields
-    $required_fields = [
-        'ENERGY STAR Unique ID',
-        'Model Number',
-        'Naece Id'
-        // Add the required columns
-    ];
+    if ($csv_source === 'DLC') {
+        // DLC required fields
+        $required_fields = [
+            'Product ID',
+            'Model Number',
+            'Naece Id'
+        ];
+    } else {
+        // ENERGY STAR required fields
+        $required_fields = [
+            'ENERGY STAR Unique ID',
+            'Model Number',
+            'Naece Id'
+            // Add the required columns
+        ];
+    }
 
     // Check if all required fields exist in the headers
     $missing_fields = array_diff($required_fields, $headers);
@@ -73,7 +83,7 @@ function process_csv_batch()
     fclose($handle);
 
     if (empty($batch)) {
-        return send_response('No more records to process', 0, $total_records);
+        return send_response('No more records to process', 0, true, $total_records);
     }
 
     // 3. Process batch
@@ -83,7 +93,12 @@ function process_csv_batch()
         $wpdb->query('START TRANSACTION');
 
         foreach ($batch as $item) {
-            $api_id = $item['ENERGY STAR Unique ID'] ?? '';
+            if ($csv_source === 'DLC') {
+                $api_id = $item['Product ID'] ?? '';
+            } else {
+                $api_id = $item['ENERGY STAR Unique ID'] ?? '';
+            }
+
             if (!$api_id) {
                 $stats['nulls']++;
                 continue;
@@ -163,6 +178,7 @@ function process_csv_batch()
             'Batch processed successfully',
             // max(0, $total_records - ($offset + $batch_size)), // no need to deduct $offset due to the $ttoal already remove the offset
             max(0, $total_records - $batch_size),
+            true,
             $total_records,
             array_merge($stats, ['process_time' => $process_time])
         );
