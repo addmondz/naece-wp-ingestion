@@ -96,7 +96,7 @@ function process_csv_batch()
             foreach ($item as $key => $value) {
                 if ($key !== 'id' && $value) {
                     // $meta['_' . sanitize_key($key)] = $value; // sanitize_key will remove space
-                    $meta['_' . str_replace(' ', '_', $key)] = $value;
+                    $meta['_' . str_replace(' ', '_', preg_replace('/[^A-Za-z0-9 ]/', '', $key))] = $value;
                 }
             }
 
