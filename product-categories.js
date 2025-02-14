@@ -1,80 +1,81 @@
 const categories = {
   Appliances: [
-    "Air Cleaners",
-    "Clothes Dryers",
-    "Clothes Washers",
-    "Commercial Clothes Washers",
     "Dehumidifiers",
-    "Dishwashers",
-    "Electric Cooking Products",
-    "Freezers",
-    "Refrigerators",
+    "Residential Clothes Dryers",
+    "Residential Clothes Washers",
+    "Residential Combination All-in-One Washer-Dryers",
+    "Residential Dishwashers",
+    "Residential Electric Cooking Products",
+    "Residential Freezers",
+    "Residential Laundry Centers",
+    "Residential Laundry Sets",
+    "Residential Refrigerators",
+    "Room Air Cleaners",
   ],
+
   "Building Products": [
-    "Residential Windows, Doors and Skylights",
-    "Seal and Insulate",
+    "Insulation",
     "Storm Windows",
+    "Windows, Doors & Skylights",
   ],
-  "Commercial Food Service Equipment": [
+
+  "Commercial Appliances": [
+    "Commercial Clothes Washers",
+    "Commercial Food Service Equipment",
     "Commercial Coffee Brewers",
-    "Commercial Cooktops",
     "Commercial Dishwashers",
+    "Commercial Electric Cooktops",
     "Commercial Fryers",
     "Commercial Griddles",
     "Commercial Hot Food Holding Cabinets",
-    "Commercial Ice Makers",
+    "Commercial Ice Machines",
     "Commercial Ovens",
-    "Commercial Refrigerators & Freezers",
+    "Commercial Refrigerators and Freezers",
     "Commercial Steam Cookers",
   ],
-  "Data Centers": [
-    "Data Center Storage",
-    "Enterprise Servers",
-    "Large Network Equipment",
-    "Uninterruptible Power Supplies",
-  ],
-  Electronics: [
-    "Audio/Video",
-    "Digital Media Player",
-    "Signage Displays",
-    "Telephones",
-    "Televisions",
-  ],
+
+  "Data Center Equipment": {
+    "Data Center Storage": ["Finder", "Block IO", "File IO"],
+
+    "Enterprise Servers": [],
+    "Large Network Equipment": [],
+    "Uninterruptible Power Supplies": [],
+  },
+
+  Electronics: ["Audio/Video", "Telephones", "Televisions"],
+
   "Heating & Cooling": [
-    "Air-Source Heat Pumps",
     "Boilers",
-    "Central Air Conditioner",
+    "Central and Mini-Split Air Conditioners",
     "Commercial Boilers",
-    "Ductless Heating & Cooling",
     "Furnaces",
     "Geothermal Heat Pumps",
-    "Light Commercial Heating & Cooling",
-    "Room Air Conditioner",
+    "Heat Pumps",
+    "Light Commercial HVAC",
+    "Room Air Conditioners",
     "Smart Thermostats",
-    "Ventilation Fans",
+    "Ventilating Fans",
   ],
-  Lighting: ["Ceiling Fans", "Decorative Light Strings", "Light Fixtures"],
-  "Office Equipment": [
-    "Computers",
-    "Imaging Equipment",
-    "Monitors",
-    "Voice over Internet Protocol (VoIP) Phones",
-  ],
+
+  Lighting: ["Decorative Light Strings", "Light Fixtures"],
+  Fans: ["Ceiling Fans"],
+
+  "Office Equipment": ["Computers", "Displays", "Imaging Equipment"],
+
   Other: [
-    "Electric Vehicle Chargers",
-    "Laboratory Grade Refrigerators and Freezers",
+    "Electric Vehicle Chargers (AC-Output)",
+    "Electric Vehicle Chargers (DC-Output)",
+    "Lab Grade Refrigerators and Freezers",
     "Pool Pumps",
-    "Smart Home Energy Management Systems",
     "Vending Machines",
     "Water Coolers",
+    "Smart Home Energy Management Systems (SHEMS)",
   ],
+
   "Water Heaters": [
     "Commercial Water Heaters",
+    "Gas Water Heaters",
     "Heat Pump Water Heaters",
-    "High Efficiency Gas Storage Water Heaters",
     "Solar Water Heaters",
-    "Whole Home Tankless Gas Water Heaters",
   ],
 };
-
-// console.log(categories);
