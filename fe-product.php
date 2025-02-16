@@ -42,13 +42,13 @@ require_once('../wp-config.php');
     </div>
 
     <!-- Main Category -->
-    <div class="form-group">
+    <div class="form-group main-category">
         <label>Main Category:</label>
         <select id="mainCategory"></select>
     </div>
 
     <!-- Sub Category -->
-    <div class="form-group">
+    <div class="form-group sub-category">
         <label>Sub Category:</label>
         <select id="subCategory"></select>
     </div>
@@ -161,6 +161,21 @@ require_once('../wp-config.php');
                 });
             }
             $subSelect.trigger('change'); // Refresh select2 display
+        });
+
+        const $csvSource = jQuery('#csvSource');
+        $csvSource.on('change', function() {
+            const mainCategory = document.getElementById('mainCategory').closest('.form-group');
+            const subCategory = document.getElementById('subCategory').closest('.form-group');
+            
+            const selectedMain = $(this).val();
+            if (this.value === 'DLC') {
+                $('.form-group.main-category').hide();
+                $('.form-group.sub-category').hide();
+            } else {
+                $('.form-group.main-category').show();
+                $('.form-group.sub-category').show();
+            }
         });
 
         // --- Batch Processing Functions (unchanged) ---
@@ -338,11 +353,16 @@ require_once('../wp-config.php');
 
         // --- Start / Stop Button Event Handlers ---
         elements.startBtn.addEventListener('click', () => {
-            if (!elements.csv.value || !elements.mainCat.value || !elements.subCat.value) {
+            if (elements.source.value === 'DLC') {
+                if (!elements.csv.value) {
+                    alert('Please fill all fields');
+                    return;
+                }
+            }
+            else if (!elements.csv.value || !elements.mainCat.value || !elements.subCat.value) {
                 alert('Please fill all fields');
                 return;
             }
-
             resetState();
             elements.tbody.innerHTML = '';
             elements.table.style.display = 'table';

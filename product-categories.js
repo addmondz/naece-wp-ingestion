@@ -12,13 +12,11 @@ const categories = {
     "Residential Refrigerators",
     "Room Air Cleaners",
   ],
-
   "Building Products": [
     "Insulation",
     "Storm Windows",
     "Windows, Doors & Skylights",
   ],
-
   "Commercial Appliances": [
     "Commercial Clothes Washers",
     "Commercial Food Service Equipment",
@@ -33,7 +31,6 @@ const categories = {
     "Commercial Refrigerators and Freezers",
     "Commercial Steam Cookers",
   ],
-
   "Data Center Equipment": {
     "Data Center Storage": ["Finder", "Block IO", "File IO"],
 
@@ -41,9 +38,7 @@ const categories = {
     "Large Network Equipment": [],
     "Uninterruptible Power Supplies": [],
   },
-
   Electronics: ["Audio/Video", "Telephones", "Televisions"],
-
   "Heating & Cooling": [
     "Boilers",
     "Central and Mini-Split Air Conditioners",
@@ -56,12 +51,9 @@ const categories = {
     "Smart Thermostats",
     "Ventilating Fans",
   ],
-
   Lighting: ["Decorative Light Strings", "Light Fixtures"],
   Fans: ["Ceiling Fans"],
-
   "Office Equipment": ["Computers", "Displays", "Imaging Equipment"],
-
   Other: [
     "Electric Vehicle Chargers (AC-Output)",
     "Electric Vehicle Chargers (DC-Output)",
@@ -71,7 +63,6 @@ const categories = {
     "Water Coolers",
     "Smart Home Energy Management Systems (SHEMS)",
   ],
-
   "Water Heaters": [
     "Commercial Water Heaters",
     "Gas Water Heaters",

@@ -21,8 +21,14 @@ function process_csv_batch()
     $offset = (int)($_POST['offset'] ?? 0);
     $batch_size = (int)($_POST['batchSize'] ?? 500);
 
-    if (!$csv_file || !$main_cat || !$sub_cat || !$csv_source) {
-        return send_response('Missing required fields', 0, false);
+    if ($csv_source === 'DLC') {
+        if (!$csv_file) {
+            return send_response('Missing required fields', 0, false);
+        }
+    } else {
+        if (!$csv_file || !$main_cat || !$sub_cat || !$csv_source) {
+            return send_response('Missing required fields', 0, false);
+        }
     }
 
     $csv_path = __DIR__ . '/csv/product/' . $csv_file;
@@ -125,12 +131,21 @@ function process_csv_batch()
             $stats['fetched']++;
 
             // Add meta data
-            $meta = [
-                '_apiid' => $api_id,
-                '_case27_listing_type' => 'productsb',
-                '_main_category' => $main_cat,
-                '_sub_category' => $sub_cat
-            ];
+            if ($csv_source === 'DLC') {
+                $meta = [
+                    '_apiid' => $api_id,
+                    '_case27_listing_type' => 'productsb',
+                    '_main_category' => $item['Qualified Product List'],
+                    '_sub_category' => $item['Category'],
+                ];
+            } else {
+                $meta = [
+                    '_apiid' => $api_id,
+                    '_case27_listing_type' => 'productsb',
+                    '_main_category' => $main_cat,
+                    '_sub_category' => $sub_cat
+                ];
+            }
 
             // Add other fields as meta
             foreach ($item as $key => $value) {
