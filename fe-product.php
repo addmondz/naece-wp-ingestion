@@ -196,7 +196,7 @@ require_once('../wp-config.php');
             });
 
             try {
-                const response = await fetch('<?= site_url() ?>/ingestion/function.php', {
+                const response = await fetch('<?= site_url() ?>/ingestion/be-product.php', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/x-www-form-urlencoded'
@@ -349,7 +349,6 @@ require_once('../wp-config.php');
                 return null; // Return null or an empty object depending on your use case
             }
         }
-
 
         // --- Start / Stop Button Event Handlers ---
         elements.startBtn.addEventListener('click', () => {
