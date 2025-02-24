@@ -99,11 +99,12 @@ function process_csv_batch()
                 continue;
             }
 
-            // Skip if api_id is empty or already exists
-            if (post_exists_by_meta('_apiid', $api_id)) {
-                $stats['duplicates']++;
-                continue;
-            }
+            // Check if the API ID already exists
+            $existing_post_id = $wpdb->get_var($wpdb->prepare(
+                "SELECT post_id FROM $wpdb->postmeta WHERE meta_key = %s AND meta_value = %s LIMIT 1",
+                '_apiid',
+                $api_id
+            ));
 
             $name           = sanitize_text_field($item['NAECE Name'] ?? 'No Title');
             $description    = sanitize_textarea_field($item['Description'] ?? '');
@@ -124,63 +125,65 @@ function process_csv_batch()
             $website        = esc_url_raw($item['Website'] ?? '');
             $energy_name    = sanitize_text_field($item['EnergyStar Name'] ?? '');
             $dlc_name       = sanitize_text_field($item['DLC Name'] ?? '');
-            $NAECE_Name         = sanitize_text_field($item['NAECE Name'] ?? '');
+            $NAECE_Name     = sanitize_text_field($item['NAECE Name'] ?? '');
 
-            $post_data = array(
-                'post_title'     => $name,
-                'post_content'   => $description,
-                'post_status'    => 'publish',
-                'comment_status' => 'open',
-                'post_type'      => 'job_listing',
-            );
+            if ($existing_post_id) {
+                // Update existing post
+                $post_data = array(
+                    'ID'           => $existing_post_id,
+                    'post_title'   => $name,
+                    'post_content' => $description,
+                    'post_status'  => 'publish',
+                    'comment_status' => 'open',
+                );
+                wp_update_post($post_data);
 
-            $post_id = wp_insert_post($post_data);
+                $stats['updated']++;
+            } else {
+                // Insert new post
+                $post_data = array(
+                    'post_title'     => $name,
+                    'post_content'   => $description,
+                    'post_status'    => 'publish',
+                    'comment_status' => 'open',
+                    'post_type'      => 'job_listing',
+                );
+                $existing_post_id = wp_insert_post($post_data);
+                $stats['inserted']++;
+            }
 
-            if ($post_id) {
-                update_post_meta($post_id, '_apiid', $api_id);
-                update_post_meta($post_id, '_job_email', $email);
-                update_post_meta($post_id, '_job_email2', $email2);
-                update_post_meta($post_id, '_job_email3', $email3);
-                update_post_meta($post_id, '_job_phone', $phone);
-                update_post_meta($post_id, '_job_phone2', $phone2);
-                update_post_meta($post_id, '_job_phone3', $phone3);
-                update_post_meta($post_id, '_case27_listing_type', 'brands');
-                update_post_meta($post_id, '_address', $address);
-                update_post_meta($post_id, '_street_address', $streetaddress);
-                update_post_meta($post_id, '_zippostal-code', $zip);
-                update_post_meta($post_id, '_citydistrict', $city);
-                update_post_meta($post_id, '_stateprovince', $state);
-                update_post_meta($post_id, '_country', $rcountry);
-                update_post_meta($post_id, '_industry', $industry);
-                update_post_meta($post_id, '_job_website', $website);
-                update_post_meta($post_id, '_EnergyName', $energy_name);
-                update_post_meta($post_id, '_DLCName', $dlc_name);
-                update_post_meta($post_id, '_NAECE_Name', $NAECE_Name);
+            if ($existing_post_id) {
+                // Update post meta data
+                $meta_fields = [
+                    '_apiid'            => $api_id,
+                    '_job_email'        => $email,
+                    '_job_email2'       => $email2,
+                    '_job_email3'       => $email3,
+                    '_job_phone'        => $phone,
+                    '_job_phone2'       => $phone2,
+                    '_job_phone3'       => $phone3,
+                    '_case27_listing_type' => 'brands',
+                    '_address'          => $address,
+                    '_street_address'   => $streetaddress,
+                    '_zippostal-code'   => $zip,
+                    '_citydistrict'     => $city,
+                    '_stateprovince'    => $state,
+                    '_country'          => $rcountry,
+                    '_industry'         => $industry,
+                    '_job_website'      => $website,
+                    '_EnergyName'       => $energy_name,
+                    '_DLCName'          => $dlc_name,
+                    '_NAECE_Name'       => $NAECE_Name
+                ];
 
+                foreach ($meta_fields as $key => $value) {
+                    update_post_meta($existing_post_id, $key, $value);
+                }
+
+                // Handle Logo Upload
                 if (!empty($logo_url)) {
                     $logo_serialized = upload_image_from_url($logo_url);
-                    if ($logo_serialized) {
-                        $wpdb->insert(
-                            $wpdb->postmeta,
-                            array(
-                                'post_id'    => $post_id,
-                                'meta_key'   => '_job_logo',
-                                'meta_value' => $logo_serialized,
-                            ),
-                            array('%d', '%s', '%s')
-                        );
-                    }
-                } else {
-                    // If no logo URL is provided, insert an empty string as _job_logo
-                    $wpdb->insert(
-                        $wpdb->postmeta,
-                        array(
-                            'post_id'    => $post_id,
-                            'meta_key'   => '_job_logo',
-                            'meta_value' => '',
-                        ),
-                        array('%d', '%s', '%s')
-                    );
+                    update_post_meta($existing_post_id, '_job_logo', $logo_serialized ?: '');
                 }
             }
 

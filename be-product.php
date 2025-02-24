@@ -123,6 +123,7 @@ function process_csv_batch()
             $post_id = wp_insert_post([
                 'post_title'  => $item['Model Number'] ?? 'No Title',
                 'post_status' => 'publish',
+                'comment_status' => 'open',
                 'post_type'   => 'job_listing'
             ]);
 

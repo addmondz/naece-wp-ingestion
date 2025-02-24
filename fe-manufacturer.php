@@ -37,6 +37,7 @@ require_once('../wp-config.php');
                 <th>Processed</th>
                 <th>Fetched</th>
                 <th>Duplicates</th>
+                <th>Updated</th>
                 <th>Nulls</th>
                 <th>Remaining</th>
                 <th>Time (s)</th>
@@ -216,6 +217,7 @@ require_once('../wp-config.php');
                 <td>${(data.processed || 0).toLocaleString()}</td>
                 <td>${(data.fetched || 0).toLocaleString()}</td>
                 <td>${(data.duplicates || 0).toLocaleString()}</td>
+                <td>${(data.updated || 0).toLocaleString()}</td>
                 <td>${(data.nulls || 0).toLocaleString()}</td>
                 <td>${data.remaining ? data.remaining.toLocaleString() : '...'}</td>
                 <td>${data.process_time ? data.process_time + 's' : '-'}</td>
