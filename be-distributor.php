@@ -92,8 +92,15 @@ function process_csv_batch()
         $wpdb->query('START TRANSACTION');
 
         foreach ($batch as $item) {
-            $api_id = sanitize_text_field($item['Api Id'] ?? '');
+            // Ensure the key names are clean
+            $cleaned_item = [];
+            foreach ($item as $key => $value) {
+                $clean_key = trim($key, "\xEF\xBB\xBF");
+                $cleaned_item[$clean_key] = $value;
+            }
+            $item = $cleaned_item;
 
+            $api_id = sanitize_text_field($item['Api Id'] ?? '');
             if (!$api_id) {
                 $stats['nulls']++;
                 continue;

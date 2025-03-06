@@ -99,6 +99,14 @@ function process_csv_batch()
         $wpdb->query('START TRANSACTION');
 
         foreach ($batch as $item) {
+            // Ensure the key names are clean
+            $cleaned_item = [];
+            foreach ($item as $key => $value) {
+                $clean_key = trim($key, "\xEF\xBB\xBF");
+                $cleaned_item[$clean_key] = $value;
+            }
+            $item = $cleaned_item;
+
             if ($csv_source === 'DLC') {
                 $api_id = $item['Product ID'] ?? '';
             } else {
